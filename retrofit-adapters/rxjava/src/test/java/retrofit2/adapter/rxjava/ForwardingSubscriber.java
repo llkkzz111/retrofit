@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2015 Square, Inc.
+ * Copyright (C) 2016 Square, Inc.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,23 +15,24 @@
  */
 package retrofit2.adapter.rxjava;
 
-import java.lang.reflect.Type;
-import retrofit2.Call;
-import retrofit2.CallAdapter;
-import rx.Observable;
-import rx.Single;
+import rx.Subscriber;
 
-final class SingleHelper {
-  static CallAdapter<Single<?>> makeSingle(final CallAdapter<Observable<?>> callAdapter) {
-    return new CallAdapter<Single<?>>() {
-      @Override public Type responseType() {
-        return callAdapter.responseType();
-      }
+abstract class ForwardingSubscriber<T> extends Subscriber<T> {
+  private final Subscriber<T> delegate;
 
-      @Override public <R> Single<?> adapt(Call<R> call) {
-        Observable<?> observable = callAdapter.adapt(call);
-        return observable.toSingle();
-      }
-    };
+  ForwardingSubscriber(Subscriber<T> delegate) {
+    this.delegate = delegate;
+  }
+
+  @Override public void onNext(T value) {
+    delegate.onNext(value);
+  }
+
+  @Override public void onCompleted() {
+    delegate.onCompleted();
+  }
+
+  @Override public void onError(Throwable throwable) {
+    delegate.onError(throwable);
   }
 }
